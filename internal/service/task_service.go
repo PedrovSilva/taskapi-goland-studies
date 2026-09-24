@@ -40,8 +40,8 @@ func (s *TaskService) Create(ctx context.Context, input CreateInput) (*domain.Ta
 		Title:       input.Title,
 		Description: input.Description,
 		Status:      domain.StatusPending,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
+		CreatedAt:   time.Now().UTC(),
+		UpdatedAt:   time.Now().UTC(),
 	}
 
 	if err := task.Validate(); err != nil {
@@ -79,7 +79,9 @@ func (s *TaskService) Update(ctx context.Context, id uuid.UUID, input UpdateInpu
 	if err != nil {
 		return nil, fmt.Errorf("task not found: %w", err)
 	}
-
+	if !input.Status.IsValid() {
+		return nil, fmt.Errorf("invalid task status: %s", *input.Status)
+	}
 	if input.Title != nil {
 		task.Title = *input.Title
 	}
@@ -92,11 +94,14 @@ func (s *TaskService) Update(ctx context.Context, id uuid.UUID, input UpdateInpu
 				return nil, err
 			}
 		} else {
+			if task.Status == domain.StatusDone {
+				return nil, fmt.Errorf("task already marked done")
+			}
 			task.Status = *input.Status
 		}
 	}
 
-	task.UpdatedAt = time.Now()
+	task.UpdatedAt = time.Now().UTC()
 
 	if err := task.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid task: %w", err)

@@ -79,6 +79,9 @@ func (r *PostgresTaskRepository) List(ctx context.Context) ([]*domain.Task, erro
 		}
 		tasks = append(tasks, task)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("postgres: iterate tasks: %w", err)
+	}
 	return tasks, nil
 }
 

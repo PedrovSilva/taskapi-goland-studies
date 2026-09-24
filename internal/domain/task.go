@@ -39,12 +39,21 @@ func (t *Task) Validate() error {
 	return nil
 }
 
+func (s Status) IsValid() bool {
+	switch s {
+	case StatusPending, StatusInProgress, StatusDone:
+		return true
+	default:
+		return false
+	}
+}
+
 // MarkDone transitions the task to done status.
 func (t *Task) MarkDone() error {
 	if t.Status == StatusDone {
 		return errors.New("task is already done")
 	}
-	now := time.Now()
+	now := time.Now().UTC()
 	t.Status = StatusDone
 	t.DoneAt = &now
 	t.UpdatedAt = now
