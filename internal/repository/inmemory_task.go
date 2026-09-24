@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -22,7 +23,7 @@ func NewInMemoryTaskRepository() *InMemoryTaskRepository {
 	}
 }
 
-func (r *InMemoryTaskRepository) Create(task *domain.Task) error {
+func (r *InMemoryTaskRepository) Create(_ context.Context, task *domain.Task) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	copy := *task
@@ -30,7 +31,7 @@ func (r *InMemoryTaskRepository) Create(task *domain.Task) error {
 	return nil
 }
 
-func (r *InMemoryTaskRepository) GetByID(id uuid.UUID) (*domain.Task, error) {
+func (r *InMemoryTaskRepository) GetByID(_ context.Context, id uuid.UUID) (*domain.Task, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	task, ok := r.tasks[id]
@@ -41,7 +42,7 @@ func (r *InMemoryTaskRepository) GetByID(id uuid.UUID) (*domain.Task, error) {
 	return &copy, nil
 }
 
-func (r *InMemoryTaskRepository) List() ([]*domain.Task, error) {
+func (r *InMemoryTaskRepository) List(_ context.Context) ([]*domain.Task, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	result := make([]*domain.Task, 0, len(r.tasks))
@@ -52,7 +53,7 @@ func (r *InMemoryTaskRepository) List() ([]*domain.Task, error) {
 	return result, nil
 }
 
-func (r *InMemoryTaskRepository) Update(task *domain.Task) error {
+func (r *InMemoryTaskRepository) Update(_ context.Context, task *domain.Task) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.tasks[task.ID]; !ok {
@@ -63,7 +64,7 @@ func (r *InMemoryTaskRepository) Update(task *domain.Task) error {
 	return nil
 }
 
-func (r *InMemoryTaskRepository) Delete(id uuid.UUID) error {
+func (r *InMemoryTaskRepository) Delete(_ context.Context, id uuid.UUID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.tasks[id]; !ok {

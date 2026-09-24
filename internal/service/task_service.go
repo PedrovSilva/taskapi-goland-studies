@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -33,7 +34,7 @@ type UpdateInput struct {
 }
 
 // Create validates and persists a new task.
-func (s *TaskService) Create(input CreateInput) (*domain.Task, error) {
+func (s *TaskService) Create(ctx context.Context, input CreateInput) (*domain.Task, error) {
 	task := &domain.Task{
 		ID:          uuid.New(),
 		Title:       input.Title,
@@ -47,7 +48,7 @@ func (s *TaskService) Create(input CreateInput) (*domain.Task, error) {
 		return nil, fmt.Errorf("invalid task: %w", err)
 	}
 
-	if err := s.repo.Create(task); err != nil {
+	if err := s.repo.Create(ctx, task); err != nil {
 		return nil, fmt.Errorf("could not create task: %w", err)
 	}
 
@@ -55,8 +56,8 @@ func (s *TaskService) Create(input CreateInput) (*domain.Task, error) {
 }
 
 // GetByID retrieves a single task by its ID.
-func (s *TaskService) GetByID(id uuid.UUID) (*domain.Task, error) {
-	task, err := s.repo.GetByID(id)
+func (s *TaskService) GetByID(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
+	task, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("could not get task: %w", err)
 	}
@@ -64,8 +65,8 @@ func (s *TaskService) GetByID(id uuid.UUID) (*domain.Task, error) {
 }
 
 // List retrieves all tasks.
-func (s *TaskService) List() ([]*domain.Task, error) {
-	tasks, err := s.repo.List()
+func (s *TaskService) List(ctx context.Context) ([]*domain.Task, error) {
+	tasks, err := s.repo.List(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not list tasks: %w", err)
 	}
@@ -73,8 +74,8 @@ func (s *TaskService) List() ([]*domain.Task, error) {
 }
 
 // Update applies partial changes to an existing task.
-func (s *TaskService) Update(id uuid.UUID, input UpdateInput) (*domain.Task, error) {
-	task, err := s.repo.GetByID(id)
+func (s *TaskService) Update(ctx context.Context, id uuid.UUID, input UpdateInput) (*domain.Task, error) {
+	task, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("task not found: %w", err)
 	}
@@ -101,7 +102,7 @@ func (s *TaskService) Update(id uuid.UUID, input UpdateInput) (*domain.Task, err
 		return nil, fmt.Errorf("invalid task: %w", err)
 	}
 
-	if err := s.repo.Update(task); err != nil {
+	if err := s.repo.Update(ctx, task); err != nil {
 		return nil, fmt.Errorf("could not update task: %w", err)
 	}
 
@@ -109,8 +110,8 @@ func (s *TaskService) Update(id uuid.UUID, input UpdateInput) (*domain.Task, err
 }
 
 // Delete removes a task by ID.
-func (s *TaskService) Delete(id uuid.UUID) error {
-	if err := s.repo.Delete(id); err != nil {
+func (s *TaskService) Delete(ctx context.Context, id uuid.UUID) error {
+	if err := s.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("could not delete task: %w", err)
 	}
 	return nil

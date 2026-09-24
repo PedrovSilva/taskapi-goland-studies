@@ -21,12 +21,12 @@ func NewPostgresTaskRepository(pool *pgxpool.Pool) *PostgresTaskRepository {
 	return &PostgresTaskRepository{pool: pool}
 }
 
-func (r *PostgresTaskRepository) Create(task *domain.Task) error {
+func (r *PostgresTaskRepository) Create(ctx context.Context, task *domain.Task) error {
 	query := `
 		INSERT INTO tasks (id, title, description, status, created_at, updated_at, done_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err := r.pool.Exec(context.Background(), query,
+	_, err := r.pool.Exec(ctx, query,
 		task.ID, task.Title, task.Description, task.Status,
 		task.CreatedAt, task.UpdatedAt, task.DoneAt,
 	)
@@ -36,12 +36,12 @@ func (r *PostgresTaskRepository) Create(task *domain.Task) error {
 	return nil
 }
 
-func (r *PostgresTaskRepository) GetByID(id uuid.UUID) (*domain.Task, error) {
+func (r *PostgresTaskRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Task, error) {
 	query := `
 		SELECT id, title, description, status, created_at, updated_at, done_at
 		FROM tasks WHERE id = $1
 	`
-	row := r.pool.QueryRow(context.Background(), query, id)
+	row := r.pool.QueryRow(ctx, query, id)
 
 	task := &domain.Task{}
 	err := row.Scan(
@@ -57,12 +57,12 @@ func (r *PostgresTaskRepository) GetByID(id uuid.UUID) (*domain.Task, error) {
 	return task, nil
 }
 
-func (r *PostgresTaskRepository) List() ([]*domain.Task, error) {
+func (r *PostgresTaskRepository) List(ctx context.Context) ([]*domain.Task, error) {
 	query := `
 		SELECT id, title, description, status, created_at, updated_at, done_at
 		FROM tasks ORDER BY created_at DESC
 	`
-	rows, err := r.pool.Query(context.Background(), query)
+	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("postgres: list tasks: %w", err)
 	}
@@ -82,13 +82,13 @@ func (r *PostgresTaskRepository) List() ([]*domain.Task, error) {
 	return tasks, nil
 }
 
-func (r *PostgresTaskRepository) Update(task *domain.Task) error {
+func (r *PostgresTaskRepository) Update(ctx context.Context, task *domain.Task) error {
 	query := `
 		UPDATE tasks
 		SET title = $1, description = $2, status = $3, updated_at = $4, done_at = $5
 		WHERE id = $6
 	`
-	result, err := r.pool.Exec(context.Background(), query,
+	result, err := r.pool.Exec(ctx, query,
 		task.Title, task.Description, task.Status,
 		task.UpdatedAt, task.DoneAt, task.ID,
 	)
@@ -101,9 +101,9 @@ func (r *PostgresTaskRepository) Update(task *domain.Task) error {
 	return nil
 }
 
-func (r *PostgresTaskRepository) Delete(id uuid.UUID) error {
+func (r *PostgresTaskRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM tasks WHERE id = $1`
-	result, err := r.pool.Exec(context.Background(), query, id)
+	result, err := r.pool.Exec(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("postgres: delete task: %w", err)
 	}

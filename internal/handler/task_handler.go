@@ -32,8 +32,8 @@ func (h *TaskHandler) Routes(r chi.Router) {
 // @Summary      Create a task
 // @Description  Creates a new task with pending status
 // @Tags         tasks
-// @Accept       json
-// @Produce      json
+// @Accept       JSON
+// @Produce      JSON
 // @Param        task  body      service.CreateInput  true  "Task input"
 // @Success      201   {object}  domain.Task
 // @Failure      400   {object}  errorResponse
@@ -46,7 +46,7 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.svc.Create(input)
+	task, err := h.svc.Create(r.Context(), input)
 	if err != nil {
 		respondError(w, http.StatusUnprocessableEntity, err.Error())
 		return
@@ -59,12 +59,12 @@ func (h *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
 // @Summary      List all tasks
 // @Description  Returns all tasks ordered by creation date
 // @Tags         tasks
-// @Produce      json
+// @Produce      JSON
 // @Success      200  {array}   domain.Task
 // @Failure      500  {object}  errorResponse
 // @Router       /tasks [get]
 func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.svc.List()
+	tasks, err := h.svc.List(r.Context())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -77,7 +77,7 @@ func (h *TaskHandler) List(w http.ResponseWriter, r *http.Request) {
 // @Summary      Get task by ID
 // @Description  Returns a single task by its UUID
 // @Tags         tasks
-// @Produce      json
+// @Produce      JSON
 // @Param        id   path      string  true  "Task UUID"
 // @Success      200  {object}  domain.Task
 // @Failure      400  {object}  errorResponse
@@ -90,7 +90,7 @@ func (h *TaskHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.svc.GetByID(id)
+	task, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -124,7 +124,7 @@ func (h *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.svc.Update(id, input)
+	task, err := h.svc.Update(r.Context(), id, input)
 	if err != nil {
 		respondError(w, http.StatusUnprocessableEntity, err.Error())
 		return
@@ -149,7 +149,7 @@ func (h *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.Delete(id); err != nil {
+	if err := h.svc.Delete(r.Context(), id); err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
 	}

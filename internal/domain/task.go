@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -53,9 +54,9 @@ func (t *Task) MarkDone() error {
 // TaskRepository defines the persistence contract for tasks.
 // Any storage backend must implement this interface.
 type TaskRepository interface {
-	Create(task *Task) error
-	GetByID(id uuid.UUID) (*Task, error)
-	List() ([]*Task, error)
-	Update(task *Task) error
-	Delete(id uuid.UUID) error
+	Create(ctx context.Context, task *Task) error
+	GetByID(ctx context.Context, id uuid.UUID) (*Task, error)
+	List(ctx context.Context) ([]*Task, error)
+	Update(ctx context.Context, task *Task) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
