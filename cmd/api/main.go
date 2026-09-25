@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	_ "fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,12 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/joho/godotenv"
 	_ "github.com/pedrovsilva/taskapi/docs"
 	"github.com/pedrovsilva/taskapi/internal/handler"
 	"github.com/pedrovsilva/taskapi/internal/repository"
 	"github.com/pedrovsilva/taskapi/internal/service"
-	_ "github.com/swaggo/http-swagger"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

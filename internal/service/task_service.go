@@ -35,13 +35,14 @@ type UpdateInput struct {
 
 // Create validates and persists a new task.
 func (s *TaskService) Create(ctx context.Context, input CreateInput) (*domain.Task, error) {
+	now := time.Now().UTC()
 	task := &domain.Task{
 		ID:          uuid.New(),
 		Title:       input.Title,
 		Description: input.Description,
 		Status:      domain.StatusPending,
-		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	if err := task.Validate(); err != nil {
