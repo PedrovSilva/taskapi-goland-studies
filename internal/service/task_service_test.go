@@ -55,27 +55,187 @@ func TestTaskService_GetByID(t *testing.T) {
 }
 
 func TestTaskService_Update(t *testing.T) {
-	svc := newService()
-	task, _ := svc.Create(context.Background(), service.CreateInput{Title: "Original"})
+	t.Run("updates title without status", func(t *testing.T) {
+		svc := newService()
 
-	t.Run("updates title", func(t *testing.T) {
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Original"},
+		)
+		require.NoError(t, err)
+
 		newTitle := "Updated"
-		updated, err := svc.Update(context.Background(), task.ID, service.UpdateInput{Title: &newTitle})
+
+		updated, err := svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Title: &newTitle,
+			},
+		)
+
 		require.NoError(t, err)
 		assert.Equal(t, "Updated", updated.Title)
+		assert.Equal(t, domain.StatusPending, updated.Status)
 	})
 
-	t.Run("transitions to done sets done_at", func(t *testing.T) {
+	t.Run("updates description", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
+		description := "Updated description"
+
+		updated, err := svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Description: &description,
+			},
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, description, updated.Description)
+	})
+
+	t.Run("transitions pending to in progress", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
+		status := domain.StatusInProgress
+
+		updated, err := svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &status,
+			},
+		)
+
+		require.NoError(t, err)
+		assert.Equal(t, domain.StatusInProgress, updated.Status)
+	})
+
+	t.Run("transitions to done and sets done_at", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
 		status := domain.StatusDone
-		updated, err := svc.Update(context.Background(), task.ID, service.UpdateInput{Status: &status})
+
+		updated, err := svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &status,
+			},
+		)
+
 		require.NoError(t, err)
 		assert.Equal(t, domain.StatusDone, updated.Status)
 		assert.NotNil(t, updated.DoneAt)
 	})
 
-	t.Run("returns error for non-existent task", func(t *testing.T) {
-		_, err := svc.Update(context.Background(), [16]byte{}, service.UpdateInput{})
+	t.Run("rejects invalid status", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
+		status := domain.Status("cancelled")
+
+		_, err = svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &status,
+			},
+		)
+
 		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid task status")
+	})
+
+	t.Run("cannot move done task back to pending", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
+		done := domain.StatusDone
+
+		_, err = svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &done,
+			},
+		)
+		require.NoError(t, err)
+
+		pending := domain.StatusPending
+
+		_, err = svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &pending,
+			},
+		)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "already marked done")
+	})
+
+	t.Run("cannot mark already done task as done", func(t *testing.T) {
+		svc := newService()
+
+		task, err := svc.Create(
+			context.Background(),
+			service.CreateInput{Title: "Task"},
+		)
+		require.NoError(t, err)
+
+		done := domain.StatusDone
+
+		_, err = svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &done,
+			},
+		)
+		require.NoError(t, err)
+
+		_, err = svc.Update(
+			context.Background(),
+			task.ID,
+			service.UpdateInput{
+				Status: &done,
+			},
+		)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "already done")
 	})
 }
 

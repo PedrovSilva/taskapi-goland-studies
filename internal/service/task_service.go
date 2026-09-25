@@ -79,9 +79,11 @@ func (s *TaskService) Update(ctx context.Context, id uuid.UUID, input UpdateInpu
 	if err != nil {
 		return nil, fmt.Errorf("task not found: %w", err)
 	}
-	if !input.Status.IsValid() {
+
+	if input.Status != nil && !input.Status.IsValid() {
 		return nil, fmt.Errorf("invalid task status: %s", *input.Status)
 	}
+
 	if input.Title != nil {
 		task.Title = *input.Title
 	}
